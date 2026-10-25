@@ -27,6 +27,12 @@ function App() {
         body: JSON.stringify({ title }),
       });
 
+      if (!res.ok) {
+        const errData = await res.json();
+        console.error("Server error:", errData.error);
+        return;
+      }
+
       const newTask = await res.json();
       console.log(newTask);
       setTodos((t) => [...t, newTask.data.newTask]);
@@ -44,6 +50,29 @@ function App() {
       const deletedTask = await res.json();
       console.log(deletedTask);
       setTodos((t) => t.filter((task) => task.id !== id));
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const toggle = async (id, completed) => {
+    try {
+      const res = await fetch(`${BASEURL}/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ completed: !completed }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        console.error("Server Error", error);
+        return;
+      }
+
+      const data = await res.json();
+      console.log(data.body)
+
+      setTodos((prev) => prev.map((t) => (t.id === id ? data.body : t)));
     } catch (error) {
       console.error(error);
     }
@@ -72,16 +101,22 @@ function App() {
           <tbody>
             {todo.map((t) => (
               <tr key={t.id}>
-                <th className="border border-gray-400 px-4 py-2 text-left">
+                <td className="border border-gray-400 px-4 py-2 text-left">
                   {t.id}
-                </th>
-                <th className="border border-gray-400 px-4 py-2 text-left">
+                </td>
+                <td className="border border-gray-400 px-4 py-2 text-left">
                   {t.title}
-                </th>
-                <th className="border border-gray-400 px-4 py-2 text-left">
+                </td>
+                <td className="border border-gray-400 px-4 py-2 text-left flex items-center gap-2">
                   {t.completed ? "Yes" : "No"}
-                </th>
-                <th className="border border-gray-400 px-4 py-2 text-left">
+                  <button
+                    className="border bg-red-500 rounded-lg px-2 py-1"
+                    onClick={() => toggle(t.id, t.completed)}
+                  >
+                    Toggle
+                  </button>
+                </td>
+                <td className="border border-gray-400 px-4 py-2 text-left">
                   <button
                     type="button"
                     className="border-2 rounded-xl px-3"
@@ -89,7 +124,7 @@ function App() {
                   >
                     Delete
                   </button>
-                </th>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -104,10 +139,7 @@ function App() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
-          <button
-            type="submit"
-            className="border-2 rounded-xl px-3 mt-2"
-          >
+          <button type="submit" className="border-2 rounded-xl px-3 mt-2">
             Add
           </button>
         </form>
