@@ -37,7 +37,7 @@ const addTodo = async (req, res) => {
       data: { newTask },
     });
   } catch (error) {
-    console.error(err);
+    console.error(error);
     res.status(500).json({ error: "Failed to add task" });
   }
 };
